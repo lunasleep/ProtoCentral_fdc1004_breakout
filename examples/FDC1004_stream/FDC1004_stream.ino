@@ -28,13 +28,13 @@
 //   For information on how to use, visit https://github.com/protocentral/ProtoCentral_fdc1004_breakout
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
-#include <Protocentral_FDC1004.h>
+//#include <Wire.h>
+#include "Protocentral_FDC1004.h"
 
 #define UPPER_BOUND  0X4000                 // max readout capacitance
 #define LOWER_BOUND  (-1 * UPPER_BOUND)
-#define CHANNEL 0                          // channel to be read
-#define MEASURMENT 0                       // measurment channel
+//#define CHANNEL 0                          // channel to be read
+//#define MEASURMENT 0                       // measurment channel
 
 int capdac = 0;
 char result[100];
@@ -49,33 +49,44 @@ void setup()
 
 void loop()
 {
-
-  FDC.configureMeasurementSingle(MEASURMENT, CHANNEL, capdac);
-  FDC.triggerSingleMeasurement(MEASURMENT, FDC1004_100HZ);
-
-  //wait for completion
-  delay(15);
-  uint16_t value[2];
-  if (! FDC.readMeasurement(MEASURMENT, value))
-  {
-    int16_t msb = (int16_t) value[0];
-    int32_t capacitance = ((int32_t)457) * ((int32_t)msb); //in attofarads
-    capacitance /= 1000;   //in femtofarads
-    capacitance += ((int32_t)3028) * ((int32_t)capdac);
-
-    Serial.print((((float)capacitance/1000)),4);
-    Serial.print("  pf, ");
-
-    if (msb > UPPER_BOUND)               // adjust capdac accordingly
-	{
-      if (capdac < FDC1004_CAPDAC_MAX)
-	  capdac++;
+  for(int CHANNEL = 0; CHANNEL <1; CHANNEL++){
+    int MEASURMENT = CHANNEL;
+    //capdac = 0;
+    FDC.configureMeasurementSingle(MEASURMENT, CHANNEL, capdac);
+    FDC.triggerSingleMeasurement(MEASURMENT, FDC1004_100HZ);
+  
+    //wait for completion
+    delay(15);
+    uint16_t value[2];
+    if (! FDC.readMeasurement(MEASURMENT, value))
+    {
+      int16_t msb = (int16_t) value[0];
+      int32_t capacitance = ((int32_t)457) * ((int32_t)msb); //in attofarads
+      capacitance /= 1000;   //in femtofarads
+      capacitance += ((int32_t)3028) * ((int32_t)capdac);
+  
+      Serial.print((((float)capacitance/1000)),4);
+      Serial.print("  pf, ");
+      Serial.print(capdac);
+      Serial.print(" ");
+      Serial.print(msb);
+      /*Serial.print(value[0], HEX);//MSB
+      Serial.print(" "); 
+      Serial.print(value[1], HEX);//LSB 
+      Serial.print(", ");*/
+  
+      if (msb > UPPER_BOUND)               // adjust capdac accordingly
+  	{
+        if (capdac < FDC1004_CAPDAC_MAX)
+  	  capdac++;
+      }
+  	else if (msb < LOWER_BOUND)
+  	{
+        if (capdac > 0)
+  	  capdac--;
+      }
+  
     }
-	else if (msb < LOWER_BOUND)
-	{
-      if (capdac > 0)
-	  capdac--;
-    }
-
   }
+  Serial.println(); 
 }

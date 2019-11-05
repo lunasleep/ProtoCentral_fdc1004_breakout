@@ -18,7 +18,7 @@
 //   For information on how to use, visit https://github.com/protocentral/ProtoCentral_fdc1004_breakout
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#include <Protocentral_FDC1004.h>
+#include "Protocentral_FDC1004.h"
 
 #define FDC1004_UPPER_BOUND ((int16_t) 0x4000)
 #define FDC1004_LOWER_BOUND (-1 * FDC1004_UPPER_BOUND)
@@ -43,6 +43,8 @@ void FDC1004::write16(uint8_t reg, uint16_t data)
   Wire.endTransmission();
 }
 
+
+//0000010010000000
 uint16_t FDC1004::read16(uint8_t reg)
 {
   Wire.beginTransmission(_addr);
@@ -69,24 +71,42 @@ uint8_t FDC1004::configureMeasurementSingle(uint8_t measurement, uint8_t channel
 
     //build 16 bit configuration
     uint16_t configuration_data;
+    //uint16_t test = ((uint16_t)0xF1);
+    //test |= ((uint16_t)0xF2) << 8;
+    //1000000000000
+    //Serial.print("\nMEAS_CONFIG & configuration_data ");
+    //Serial.print(MEAS_CONFIG[measurement], BIN); 
+    //Serial.print(" -- ");
     configuration_data = ((uint16_t)channel) << 13; //CHA
+    //Serial.print(configuration_data, BIN);
+    //Serial.print(", "); 
     configuration_data |=  ((uint16_t)0x04) << 10; //CHB disable / CAPDAC enable
+    //Serial.print(configuration_data, BIN);
+    //Serial.print(", ");
     configuration_data |= ((uint16_t)capdac) << 5; //CAPDAC value
+    //Serial.print(configuration_data, BIN);
+    //Serial.print(test, HEX);
+  
     write16(MEAS_CONFIG[measurement], configuration_data);
     return 0;
 }
 
 uint8_t FDC1004::triggerSingleMeasurement(uint8_t measurement, uint8_t rate)
 {
+  //Serial.println("in triggerSingleMeasurement");
   //verify data
     if (!FDC1004_IS_MEAS(measurement) || !FDC1004_IS_RATE(rate)) {
         Serial.println("bad trigger request");
         return 1;
     }
     uint16_t trigger_data;
+    //Serial.print("\nFDC_REGISTER & trigger_data ");
+    //Serial.print(FDC_REGISTER, BIN); 
+    //Serial.print(" -- ");
     trigger_data = ((uint16_t)rate) << 10; // sample rate
     trigger_data |= 0 << 8; //repeat disabled
     trigger_data |= (1 << (7-measurement)); // 0 > bit 7, 1 > bit 6, etc
+    //Serial.print(trigger_data, BIN);
     write16(FDC_REGISTER, trigger_data);
 }
 
@@ -110,7 +130,10 @@ uint8_t FDC1004::readMeasurement(uint8_t measurement, uint16_t * value)
 
   //read the value
   uint16_t msb = read16(MEAS_MSB[measurement]);
+  //Serial.print(msb, HEX); 
+  //Serial.print(" "); 
   uint16_t lsb = read16(MEAS_LSB[measurement]);
+  //Serial.println(lsb, HEX); 
   value[0] = msb;
   value[1] = lsb;
   return 0;
