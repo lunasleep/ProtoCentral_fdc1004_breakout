@@ -86,7 +86,13 @@ uint8_t FDC1004::configureMeasurementSingle(uint8_t measurement, uint8_t channel
     configuration_data |= ((uint16_t)capdac) << 5; //CAPDAC value
     //Serial.print(configuration_data, BIN);
     //Serial.print(test, HEX);
-  
+    Serial.print("Channel: "); 
+    Serial.print(channel); 
+    Serial.print(" Config Regi to Xmit 0x"); 
+    Serial.print(configuration_data, HEX);
+    Serial.print(" target regi: 0x");
+    Serial.print(MEAS_CONFIG[measurement], HEX); 
+    Serial.print(" "); 
     write16(MEAS_CONFIG[measurement], configuration_data);
     return 0;
 }
@@ -106,7 +112,11 @@ uint8_t FDC1004::triggerSingleMeasurement(uint8_t measurement, uint8_t rate)
     trigger_data = ((uint16_t)rate) << 10; // sample rate
     trigger_data |= 0 << 8; //repeat disabled
     trigger_data |= (1 << (7-measurement)); // 0 > bit 7, 1 > bit 6, etc
-    //Serial.print(trigger_data, BIN);
+    Serial.print(" TrigData Regi to Xmit 0x"); 
+    Serial.print(trigger_data, HEX);
+    Serial.print(" target regi 0x");
+    Serial.print(FDC_REGISTER);
+    Serial.print(" ");
     write16(FDC_REGISTER, trigger_data);
 }
 
@@ -123,7 +133,10 @@ uint8_t FDC1004::readMeasurement(uint8_t measurement, uint16_t * value)
 
     //check if measurement is complete
     uint16_t fdc_register = read16(FDC_REGISTER);
-    if (! (fdc_register & ( 1 << (3-measurement)))) {
+    Serial.print(" FDC Read: 0x"); 
+    Serial.print(fdc_register, HEX); 
+    Serial.print(" ");
+    if (!(fdc_register & ( 1 << (3-measurement)))) {
         Serial.println("measurement not completed");
         return 2;
     }

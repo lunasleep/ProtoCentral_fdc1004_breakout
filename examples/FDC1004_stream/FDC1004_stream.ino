@@ -49,10 +49,10 @@ void setup()
 
 void loop()
 {
-  for(int CHANNEL = 0; CHANNEL <1; CHANNEL++){
+  for(int CHANNEL = 0; CHANNEL <4; CHANNEL++){
     int MEASURMENT = CHANNEL;
     //capdac = 0;
-    FDC.configureMeasurementSingle(MEASURMENT, CHANNEL, capdac);
+    FDC.configureMeasurementSingle(MEASURMENT, CHANNEL, capdac);//printing this.channel & config register
     FDC.triggerSingleMeasurement(MEASURMENT, FDC1004_100HZ);
   
     //wait for completion
@@ -60,20 +60,13 @@ void loop()
     uint16_t value[2];
     if (! FDC.readMeasurement(MEASURMENT, value))
     {
-      int16_t msb = (int16_t) value[0];
+      int16_t msb = (int16_t) value[0];//ONLY MSB IS USED? 
       int32_t capacitance = ((int32_t)457) * ((int32_t)msb); //in attofarads
       capacitance /= 1000;   //in femtofarads
       capacitance += ((int32_t)3028) * ((int32_t)capdac);
   
       Serial.print((((float)capacitance/1000)),4);
-      Serial.print("  pf, ");
-      Serial.print(capdac);
-      Serial.print(" ");
-      Serial.print(msb);
-      /*Serial.print(value[0], HEX);//MSB
-      Serial.print(" "); 
-      Serial.print(value[1], HEX);//LSB 
-      Serial.print(", ");*/
+      Serial.println("  pf");
   
       if (msb > UPPER_BOUND)               // adjust capdac accordingly
   	{
@@ -88,5 +81,5 @@ void loop()
   
     }
   }
-  Serial.println(); 
+  //Serial.println(); 
 }
